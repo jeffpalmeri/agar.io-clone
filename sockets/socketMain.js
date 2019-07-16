@@ -19,12 +19,15 @@ let settings = {
 
 initGame();
 
-// Issue a message to EVERY connected socket 30 fps
-// setInterval(() => {
-//   io.to('game').emit('tock', {
-//     players
-//   });
-// }, 33);
+// Issue a message ro EVERY connected socket 30 fps
+setInterval(() => {
+  // console.log('tock');
+  if(players.length > 0) {
+    io.to('game').emit('tock', {
+      players
+    });
+  }
+}, 33);
 
 io.sockets.on('connect', (socket) => {
   let player = {};
@@ -40,11 +43,11 @@ io.sockets.on('connect', (socket) => {
     // make a master player object to hold both
     player = new Player(socket.id, playerConfig, playerData);
 
+    // Issue a message to THIS client with it's loc 30/sec
     setInterval(() => {
       // console.log('tock');
       if(player.tickSent) {
-        io.to('game').emit('tock', {
-          players,
+        socket.emit('tickTock', {
           playerX: player.playerData.locX,
           playerY: player.playerData.locY,
         });

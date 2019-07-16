@@ -28,7 +28,10 @@ socket.on('initReturn', (data) => {
 
 socket.on('tock', (data) => {
   // console.log(data);
-  players = data.players,
+  players = data.players
+});
+
+socket.on('tickTock', (data) => {
   player.locX = data.playerX,
   player.locY = data.playerY
 });
