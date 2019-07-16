@@ -58,7 +58,7 @@ io.sockets.on('connect', (socket) => {
     players.push(playerData);
   });
   
-  // The server sent over the tick, that means we know what direction to move the socket/player
+  // The client sent over the tick, that means we know what direction to move the socket/player
   socket.on('tick', (data) => {
     player.tickSent = true;
     if (data.xVector && data.yVector) {
