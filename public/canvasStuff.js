@@ -8,7 +8,7 @@ function draw() {
   // Clear the screen out so the old stuff is gone from the last frame
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  console.log(player.locX, player.locY);
+  // console.log(player.locX, player.locY);
 
   // Clamp the camera to the player
   const camX = - player.locX + canvas.width/2;
@@ -23,7 +23,7 @@ function draw() {
     // arg3 = radius
     // arg4 = where to start on the circle in radians, 0 = 3:00
     // arg5 = where to stop in radians
-    context.arc(p.locX, p.locY, 10, 0, Math.PI*2);
+    context.arc(p.locX, p.locY, p.radius, 0, Math.PI*2);
     // context.arc(200, 200, 10, 0, Math.PI*2);
     context.fill();
     context.lineWidth = 3;

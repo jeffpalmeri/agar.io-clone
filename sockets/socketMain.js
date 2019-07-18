@@ -1,5 +1,7 @@
 // Where all our main socket stuff will go
 const io = require('../servers').io;
+const checkForOrbCollisions = require('./checkCollisions').checkForOrbCollisions;
+const checkForPlayerCollisions = require('./checkCollisions').checkForPlayerCollisions;
 
 const Player = require('./classes/Player');
 const PlayerData = require('./classes/PlayerData');
@@ -8,7 +10,7 @@ const Orb = require('./classes/Orb');
 let orbs = [];
 let players = [];
 let settings = {
-  defaultOrbs: 500,
+  defaultOrbs: 50,
   defaultSpeed: 5,
   defaultSize: 6,
   // As a player gets bigger, the zoom needs to go out
@@ -71,18 +73,60 @@ io.sockets.on('connect', (socket) => {
       xV = player.playerConfig.xVector = data.xVector;
       yV = player.playerConfig.yVector = data.yVector;
 
-      if((player.playerData.locX < 5 && player.playerData.xVector < 0) || (player.playerData.locX > 500) && (xV > 0)){
+      if((player.playerData.locX < 5 && player.playerData.xVector < 0) || (player.playerData.locX > settings.worldWidth) && (xV > 0)){
           player.playerData.locY -= speed * yV;
-      }else if((player.playerData.locY < 5 && yV > 0) || (player.playerData.locY > 500) && (yV < 0)){
+      }else if((player.playerData.locY < 5 && yV > 0) || (player.playerData.locY > settings.worldHeight) && (yV < 0)){
           player.playerData.locX += speed * xV;
       }else{
           player.playerData.locX += speed * xV;
           player.playerData.locY -= speed * yV;
       }
       player.tickSent = true;
+      // ORB COLLISION!!!
+      let capturedOrb = checkForOrbCollisions(player.playerData, player.playerConfig, orbs, settings);
+      capturedOrb.then((data) => {
+        // then runs if resolve runs! A collision happened!
+        // console.log(`Orb collision! at ${data}`);
+        // emit to all socketsthe orb to replace
+        const orbData = {
+          orbIndex: data,
+          newOrb: orbs[data]
+        }
+        // console.log(orbData);
+        // Every socket needs to know the leaderboard has changed
+        io.sockets.emit('updateLeaderBoard', getLeaderBoard());
+        io.sockets.emit('orbSwitch', orbData);
+      }).catch(() => {
+        // catch runs if reject runs! No collisions.
+        // console.log('No collision!');
+      });
+
+      // PLAYER COLLISION!!!
+      let playerDeath = checkForPlayerCollisions(player.playerData, player.playerConfig, players, player.socketId);
+      playerDeath.then((data) => {
+        // console.log('player collision!');
+        // Every socket needs to know the leaderboard has changed
+        io.sockets.emit('updateLeaderBoard', getLeaderBoard());
+      }).catch(() => {
+
+      })
     }
   });
 });
+
+function getLeaderBoard() {
+  // sort players in descending order
+  players.sort((a, b) => {
+    return b.score - a.score;
+  });
+  let leaderBoard = players.map((curPlayer) => {
+    return {
+      name: curPlayer.name,
+      score: curPlayer.score
+    }
+  });
+  return leaderBoard;
+}
 
 // Run at the beginning of a new game
 function initGame() {
