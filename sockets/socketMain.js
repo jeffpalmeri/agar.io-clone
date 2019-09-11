@@ -107,9 +107,26 @@ io.sockets.on('connect', (socket) => {
         // console.log('player collision!');
         // Every socket needs to know the leaderboard has changed
         io.sockets.emit('updateLeaderBoard', getLeaderBoard());
+        // a player was absorbed, let everyone know!
+        io.sockets.emit('playerDeath', data);
+
       }).catch(() => {
 
       })
+    }
+  });
+  socket.on('disconnect', (data) => {
+    // console.log(data);
+    // find out who just left... which player in the players array
+    // make sure the player exists
+    if(player.playerData) {
+      players.forEach((curPlayer, i) => {
+        if(curPlayer.uid == player.playerData.uid) {
+          players.splice(i, 1);
+          io.sockets.emit('updateLeaderBoard', getLeaderBoard());
+        }
+      });
+      // potential database stuff could go here
     }
   });
 });
